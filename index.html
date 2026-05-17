@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pharmacy Tools Hub</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 32px 24px 24px;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p { margin-top: 8px; color: #a0aec0; font-size: 1rem; }
+
+    .hub-container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #718096;
+      margin-bottom: 16px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .tool-card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid #e2e8f0;
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: block;
+    }
+    .tool-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      transform: translateY(-2px);
+    }
+    .tool-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .card-icon {
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+    }
+    .icon-milk  { background: #ebf8ff; }
+    .icon-pill  { background: #f0fff4; }
+    .icon-chart { background: #fffaf0; }
+    .icon-box   { background: #faf5ff; }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+    .card-desc {
+      font-size: 0.875rem;
+      color: #718096;
+      line-height: 1.5;
+    }
+
+    .badge-soon {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 2px 8px;
+      background: #edf2f7;
+      color: #718096;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      color: #a0aec0;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏥 Pharmacy Tools</h1>
+  <p>Your Brand Pharmacy — Management Hub</p>
+</header>
+
+<div class="hub-container">
+
+  <p class="section-title">Active Tools</p>
+  <div class="tools-grid">
+
+    <a href="./milk/" class="tool-card">
+      <div class="card-icon icon-milk">🥛</div>
+      <div class="card-title">Milk Procurement</div>
+      <div class="card-desc">Compare prices across sub-agents and generate optimal split purchase orders.</div>
+    </a>
+
+    <a href="./wasfaty/" class="tool-card">
+      <div class="card-icon icon-pill">💊</div>
+      <div class="card-title">Wasfaty Auto-Order</div>
+      <div class="card-desc">Track Wasfaty consumption from sales data and auto-generate POs by supplier.</div>
+    </a>
+
+  </div>
+
+  <p class="section-title">Coming Soon</p>
+  <div class="tools-grid">
+
+    <div class="tool-card disabled">
+      <div class="card-icon icon-chart">📊</div>
+      <div class="card-title">Analytics Dashboard</div>
+      <div class="card-desc">Unified view of sales performance, procurement spend, and inventory health.</div>
+      <span class="badge-soon">Coming Soon</span>
+    </div>
+
+    <div class="tool-card disabled">
+      <div class="card-icon icon-box">📦</div>
+      <div class="card-title">Inventory Min/Max</div>
+      <div class="card-desc">Auto-set min/max levels per product based on historical consumption patterns.</div>
+      <span class="badge-soon">Coming Soon</span>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>© 2026 — Pharmacy Management Tools</footer>
+
+</body>
+</html>
