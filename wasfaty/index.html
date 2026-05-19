@@ -294,10 +294,11 @@
             <th style="width:95px">Classification</th>
             <th style="width:55px;text-align:center">Items</th>
             <th style="width:85px">Product Ref</th>
+            <th style="width:110px">Supplier</th>
             <th style="width:72px;text-align:center">Operating</th>
           </tr></thead>
           <tbody id="ac-table-tbody">
-            <tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px">Loading...</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:#aaa;padding:30px">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -637,7 +638,7 @@ let selectedACIds=new Set();
 
 async function loadACList(){
   const[{data:acs},{data:counts}]=await Promise.all([
-    db.from('wasfaty_active_constituents').select('id,name,is_operating,classification,product_ref').order('name'),
+    db.from('wasfaty_active_constituents').select('id,name,is_operating,classification,product_ref,assigned_supplier_id,wasfaty_suppliers(name)').order('name'),
     db.from('wasfaty_ac_items').select('ac_id')
   ]);
   allACs=acs||[];
@@ -675,7 +676,7 @@ function renderACTable(){
   document.getElementById('ac-table-footer').textContent=`Showing ${filtered.length} of ${allACs.length} generics`;
 
   if(!filtered.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px">No results</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#aaa;padding:30px">No results</td></tr>';
     return;
   }
 
@@ -701,6 +702,7 @@ function renderACTable(){
       </td>
       <td style="text-align:center;font-size:13px;color:#666">${itemCount}</td>
       <td style="font-size:12px;color:#666;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${esc(ac.product_ref||'')}">${ac.product_ref?esc(ac.product_ref):'<span style="color:#aaa">—</span>'}</td>
+      <td style="font-size:12px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px" title="${esc(ac.wasfaty_suppliers?.name||'')}">${ac.wasfaty_suppliers?.name?esc(ac.wasfaty_suppliers.name):'<span style="color:#aaa">—</span>'}</td>
       <td style="text-align:center"><span class="badge ${ac.is_operating?'badge-green':'badge-gray'}" style="font-size:10px">${ac.is_operating?'Yes':'No'}</span></td>
     </tr>`;
   }).join('');
