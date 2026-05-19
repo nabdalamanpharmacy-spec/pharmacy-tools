@@ -105,6 +105,12 @@
     /* SPLIT LAYOUT */
     .split-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;}
     @media(max-width:900px){.split-layout{grid-template-columns:1fr;}}
+    .split-layout-wide{display:grid;grid-template-columns:1fr 380px;gap:20px;}
+    @media(max-width:1000px){.split-layout-wide{grid-template-columns:1fr;}}
+    .tr-unclassified{background:#fffbeb !important;}
+    .tr-selected{background:#dbeefb !important;}
+    .ac-class-filter{background:#f0f2f5;color:#555;border:1.5px solid transparent;}
+    .ac-class-filter.active{border-color:#2980b9;background:#edf4fa;color:#2980b9;}
     .panel-list{background:#f8fafc;border-radius:10px;border:1px solid #e8eaf0;overflow:hidden;}
     .panel-list-header{padding:12px 16px;background:#fff;border-bottom:1px solid #e8eaf0;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;}
     .panel-list-item{padding:12px 16px;border-bottom:1px solid #f0f2f5;cursor:pointer;transition:background .15s;font-size:14px;}
@@ -219,28 +225,83 @@
 <!-- ============================= TAB: SETUP ============================= -->
 <div class="tab-panel active" id="tab-setup">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-    <h2 style="font-size:20px;font-weight:800;color:#1a1a2e">Active Constituents &amp; Items</h2>
+    <h2 style="font-size:20px;font-weight:800;color:#1a1a2e">Active Constituents Setup</h2>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-secondary btn-sm" onclick="openWasfatyImport()">📂 Import Wasfaty File</button>
       <button class="btn btn-primary btn-sm" onclick="openAddACModal()">+ New AC</button>
     </div>
   </div>
 
-  <div class="split-layout">
-    <!-- Left: AC List -->
-    <div>
-      <div class="panel-list">
-        <div class="panel-list-header">
-          Active Constituents
-          <span id="ac-count" class="badge badge-blue">0</span>
-        </div>
-        <div style="padding:8px">
-          <input class="form-input" placeholder="Search ACs..." oninput="filterACList(this.value)" style="margin-bottom:0"/>
-        </div>
-        <div id="ac-list" style="max-height:600px;overflow-y:auto">
-          <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No active constituents yet</p><small>Import Wasfaty file or add manually</small></div>
+  <!-- Unclassified warning banner -->
+  <div id="unclassified-banner" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px">
+    <span style="color:#856404;font-weight:600">⚠ You have <strong id="unclassified-count">0</strong> unclassified generics — review them to enable Auto PO</span>
+    <button class="btn btn-sm" style="background:#ffc107;color:#333;white-space:nowrap" onclick="setClassFilter('null')">Show Unclassified</button>
+  </div>
+
+  <!-- Classification overview cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="stat-card" style="border-left-color:#27ae60;cursor:pointer" onclick="setClassFilter('A')">
+      <div class="section-label">Class A</div>
+      <div class="stat-num" style="color:#27ae60" id="cls-a-count">—</div>
+      <div class="stat-label">Important · Will operate</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#e67e22;cursor:pointer" onclick="setClassFilter('B')">
+      <div class="section-label">Class B</div>
+      <div class="stat-num" style="color:#e67e22" id="cls-b-count">—</div>
+      <div class="stat-label">Potential items</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#95a5a6;cursor:pointer" onclick="setClassFilter('C')">
+      <div class="section-label">Class C</div>
+      <div class="stat-num" style="color:#95a5a6" id="cls-c-count">—</div>
+      <div class="stat-label">Won't work on</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#e74c3c;cursor:pointer" onclick="setClassFilter('null')">
+      <div class="section-label">Unclassified</div>
+      <div class="stat-num" style="color:#e74c3c" id="cls-null-count">—</div>
+      <div class="stat-label">Need your review</div>
+    </div>
+  </div>
+
+  <div class="split-layout-wide">
+    <!-- Left: AC Table -->
+    <div class="card" style="padding:16px">
+      <!-- Filter/Search/Bulk bar -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <input class="form-input" style="flex:1;min-width:160px;padding:7px 12px" id="ac-search" placeholder="Search generic name..." oninput="filterACTable()"/>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-sm ac-class-filter active" data-cls="all" onclick="setClassFilter('all')">All</button>
+          <button class="btn btn-sm ac-class-filter" data-cls="A" onclick="setClassFilter('A')"><span class="badge badge-green" style="font-size:10px;padding:1px 6px">A</span></button>
+          <button class="btn btn-sm ac-class-filter" data-cls="B" onclick="setClassFilter('B')"><span class="badge badge-orange" style="font-size:10px;padding:1px 6px">B</span></button>
+          <button class="btn btn-sm ac-class-filter" data-cls="C" onclick="setClassFilter('C')"><span class="badge badge-gray" style="font-size:10px;padding:1px 6px">C</span></button>
+          <button class="btn btn-sm ac-class-filter" data-cls="null" onclick="setClassFilter('null')"><span class="badge badge-red" style="font-size:10px;padding:1px 6px">?</span></button>
         </div>
       </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="font-size:13px;color:#666;display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="select-all-visible" onchange="toggleSelectAll(this.checked)"/> Select visible
+        </label>
+        <div id="bulk-actions" style="display:none;gap:6px">
+          <button class="btn btn-sm btn-secondary" onclick="bulkSetClassification('B')">Set as B</button>
+          <button class="btn btn-sm btn-secondary" onclick="bulkSetClassification('C')">Set as C</button>
+          <button class="btn btn-sm btn-danger" onclick="bulkSetClassification(null)">Clear class</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:520px;overflow-y:auto">
+        <table id="ac-table">
+          <thead><tr>
+            <th style="width:28px"></th>
+            <th>Generic Name</th>
+            <th style="width:95px">Classification</th>
+            <th style="width:55px;text-align:center">Items</th>
+            <th style="width:85px">Product Ref</th>
+            <th style="width:72px;text-align:center">Operating</th>
+          </tr></thead>
+          <tbody id="ac-table-tbody">
+            <tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#999" id="ac-table-footer"></div>
     </div>
 
     <!-- Right: AC Detail -->
@@ -248,8 +309,8 @@
       <div class="card" style="min-height:300px">
         <div class="empty-state" style="padding:60px 20px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          <p>Select an active constituent</p>
-          <small>Click any item in the list to see details</small>
+          <p>Select a generic</p>
+          <small>Click any row to see details</small>
         </div>
       </div>
     </div>
@@ -570,36 +631,140 @@ async function deleteSupplier(id){
 // ===========================
 // TAB 1: SETUP
 // ===========================
+let acClassFilter='all';
+let acItemCounts={};
+let selectedACIds=new Set();
+
 async function loadACList(){
-  const{data}=await db.from('wasfaty_active_constituents').select('id,name,is_operating').order('name');
-  allACs=data||[];
-  renderACList(allACs);
+  const[{data:acs},{data:counts}]=await Promise.all([
+    db.from('wasfaty_active_constituents').select('id,name,is_operating,classification,product_ref').order('name'),
+    db.from('wasfaty_ac_items').select('ac_id')
+  ]);
+  allACs=acs||[];
+  // Build item count map
+  acItemCounts={};
+  for(const row of (counts||[])){
+    acItemCounts[row.ac_id]=(acItemCounts[row.ac_id]||0)+1;
+  }
+  updateClassificationCounts();
+  renderACTable();
 }
 
-function renderACList(acs){
-  const el=document.getElementById('ac-list');
-  document.getElementById('ac-count').textContent=acs.length;
-  if(!acs.length){
-    el.innerHTML='<div class="empty-state"><p>No active constituents</p><small>Import Wasfaty file or add manually</small></div>';
+function updateClassificationCounts(){
+  const c={A:0,B:0,C:0,null:0};
+  for(const ac of allACs){const k=ac.classification||'null';c[k]=(c[k]||0)+1;}
+  document.getElementById('cls-a-count').textContent=c.A;
+  document.getElementById('cls-b-count').textContent=c.B;
+  document.getElementById('cls-c-count').textContent=c.C;
+  document.getElementById('cls-null-count').textContent=c.null;
+  const banner=document.getElementById('unclassified-banner');
+  banner.style.display=c.null>0?'flex':'none';
+  if(c.null>0) document.getElementById('unclassified-count').textContent=c.null;
+}
+
+function renderACTable(){
+  const q=(document.getElementById('ac-search')?.value||'').toLowerCase();
+  const filtered=allACs.filter(ac=>{
+    const matchSearch=!q||ac.name.toLowerCase().includes(q);
+    const cls=ac.classification||'null';
+    const matchFilter=acClassFilter==='all'||acClassFilter===cls;
+    return matchSearch&&matchFilter;
+  });
+
+  const tbody=document.getElementById('ac-table-tbody');
+  document.getElementById('ac-table-footer').textContent=`Showing ${filtered.length} of ${allACs.length} generics`;
+
+  if(!filtered.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px">No results</td></tr>';
     return;
   }
-  el.innerHTML=acs.map(ac=>`
-    <div class="panel-list-item ${ac.id===selectedACId?'active':''}" onclick="selectAC('${ac.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div class="item-name" dir="auto">${esc(ac.name)}</div>
-        <span class="badge ${ac.is_operating?'badge-green':'badge-gray'}" style="flex-shrink:0;margin-left:8px">${ac.is_operating?'Operating':'Inactive'}</span>
-      </div>
-    </div>`).join('');
+
+  tbody.innerHTML=filtered.map(ac=>{
+    const cls=ac.classification;
+    const clsBadge=cls==='A'?'<span class="badge badge-green">A</span>':
+      cls==='B'?'<span class="badge badge-orange">B</span>':
+      cls==='C'?'<span class="badge badge-gray">C</span>':
+      '<span class="badge badge-red">?</span>';
+    const itemCount=acItemCounts[ac.id]||0;
+    const isUnclassified=!cls;
+    const isSelected=ac.id===selectedACId;
+    return `<tr class="${isUnclassified?'tr-unclassified':''} ${isSelected?'tr-selected':''}" style="cursor:pointer" onclick="selectAC('${ac.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="ac-row-check" data-id="${ac.id}" ${selectedACIds.has(ac.id)?'checked':''} onchange="updateBulkActions()"/></td>
+      <td style="font-size:13px;font-weight:500;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(ac.name)}">${esc(ac.name)}</td>
+      <td onclick="event.stopPropagation()">
+        <select class="form-select" style="padding:4px 6px;font-size:12px;width:68px" onchange="setClassification('${ac.id}',this.value||null,this)">
+          <option value="" ${!cls?'selected':''}>—</option>
+          <option value="A" ${cls==='A'?'selected':''}>A</option>
+          <option value="B" ${cls==='B'?'selected':''}>B</option>
+          <option value="C" ${cls==='C'?'selected':''}>C</option>
+        </select>
+      </td>
+      <td style="text-align:center;font-size:13px;color:#666">${itemCount}</td>
+      <td style="font-size:12px;color:#666;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${esc(ac.product_ref||'')}">${ac.product_ref?esc(ac.product_ref):'<span style="color:#aaa">—</span>'}</td>
+      <td style="text-align:center"><span class="badge ${ac.is_operating?'badge-green':'badge-gray'}" style="font-size:10px">${ac.is_operating?'Yes':'No'}</span></td>
+    </tr>`;
+  }).join('');
 }
 
-function filterACList(q){
-  const filtered=allACs.filter(ac=>ac.name.toLowerCase().includes(q.toLowerCase()));
-  renderACList(filtered);
+function filterACTable(){renderACTable();}
+
+function setClassFilter(cls){
+  acClassFilter=cls;
+  document.querySelectorAll('.ac-class-filter').forEach(b=>{
+    b.classList.toggle('active',b.dataset.cls===cls);
+  });
+  renderACTable();
+}
+
+async function setClassification(id, val, selectEl){
+  const isOp=val==='A';
+  const{error}=await db.from('wasfaty_active_constituents').update({classification:val||null,is_operating:val==='A'?true:undefined}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  const ac=allACs.find(a=>a.id===id);
+  if(ac){ac.classification=val||null;if(val==='A')ac.is_operating=true;}
+  updateClassificationCounts();
+  renderACTable();
+  toast('Classification saved','success');
+}
+
+function toggleSelectAll(checked){
+  document.querySelectorAll('.ac-row-check').forEach(cb=>{
+    cb.checked=checked;
+    const id=cb.dataset.id;
+    if(checked)selectedACIds.add(id);else selectedACIds.delete(id);
+  });
+  updateBulkActions();
+}
+
+function updateBulkActions(){
+  document.querySelectorAll('.ac-row-check').forEach(cb=>{
+    const id=cb.dataset.id;
+    if(cb.checked)selectedACIds.add(id);else selectedACIds.delete(id);
+  });
+  const bulk=document.getElementById('bulk-actions');
+  bulk.style.display=selectedACIds.size>0?'flex':'none';
+}
+
+async function bulkSetClassification(val){
+  if(!selectedACIds.size)return;
+  const ids=[...selectedACIds];
+  showSpinner(`Updating ${ids.length} items...`);
+  try{
+    const{error}=await db.from('wasfaty_active_constituents').update({classification:val||null}).in('id',ids);
+    if(error)throw error;
+    for(const id of ids){const ac=allACs.find(a=>a.id===id);if(ac)ac.classification=val||null;}
+    selectedACIds.clear();
+    document.getElementById('select-all-visible').checked=false;
+    updateClassificationCounts();
+    renderACTable();
+    toast(`Updated ${ids.length} items`,'success');
+  }catch(e){toast('Error: '+e.message,'error');}
+  finally{hideSpinner();}
 }
 
 async function selectAC(id){
   selectedACId=id;
-  renderACList(allACs);
+  renderACTable();
   showSpinner('Loading AC details...');
   try{
     const[{data:ac},{data:acItems},{data:suppliers}]=await Promise.all([
@@ -614,20 +779,36 @@ async function selectAC(id){
 
 function renderACDetail(ac, acItems, suppliers){
   const supplierOptions=suppliers.map(s=>`<option value="${s.id}" ${ac.assigned_supplier_id===s.id?'selected':''}>${esc(s.name)}</option>`).join('');
+  const clsBadge=ac.classification==='A'?'<span class="badge badge-green">A — Important</span>':
+    ac.classification==='B'?'<span class="badge badge-orange">B — Potential</span>':
+    ac.classification==='C'?'<span class="badge badge-gray">C — Won\'t work on</span>':
+    '<span class="badge badge-red">Unclassified</span>';
   const panel=document.getElementById('ac-detail-panel');
   panel.innerHTML=`
     <div class="card">
-      <div class="flex-between mb-16">
-        <div>
-          <h3 style="font-size:17px;font-weight:700;color:#1a1a2e" dir="auto">${esc(ac.name)}</h3>
+      <div class="mb-16">
+        <h3 style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:8px;line-height:1.4" dir="auto">${esc(ac.name)}</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          ${clsBadge}
+          <div class="toggle-wrap">
+            <span class="text-small text-muted">Operating</span>
+            <label class="toggle">
+              <input type="checkbox" ${ac.is_operating?'checked':''} onchange="toggleACOperating('${ac.id}',this.checked)"/>
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
-        <div class="toggle-wrap">
-          <span class="text-small text-muted">Operating</span>
-          <label class="toggle">
-            <input type="checkbox" ${ac.is_operating?'checked':''} onchange="toggleACOperating('${ac.id}',this.checked)"/>
-            <span class="slider"></span>
-          </label>
-        </div>
+      </div>
+
+      <div class="section-label">Classification</div>
+      <div class="inline-input-row mb-16">
+        <select class="form-select" id="detail-cls-select">
+          <option value="" ${!ac.classification?'selected':''}>— Unclassified —</option>
+          <option value="A" ${ac.classification==='A'?'selected':''}>A — Important (will operate)</option>
+          <option value="B" ${ac.classification==='B'?'selected':''}>B — Potential</option>
+          <option value="C" ${ac.classification==='C'?'selected':''}>C — Won't work on</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="saveDetailClassification('${ac.id}')">Save</button>
       </div>
 
       <div class="section-label">Product Ref (from POS)</div>
@@ -647,20 +828,20 @@ function renderACDetail(ac, acItems, suppliers){
 
       <div class="divider"></div>
       <div class="flex-between mb-12">
-        <div class="section-label" style="margin:0">Linked Wasfaty Items (${acItems.length})</div>
+        <div class="section-label" style="margin:0">Wasfaty Items (${acItems.length})</div>
         <button class="btn btn-outline btn-sm" onclick="openLinkItemModal('${ac.id}')">+ Link Item</button>
       </div>
-      <div class="table-wrap mb-16">
+      <div class="table-wrap mb-16" style="max-height:300px;overflow-y:auto">
         <table>
-          <thead><tr><th>SFDA Code</th><th>Trade Name</th><th>Type</th><th>NUPCO Price</th><th>Status</th><th>Primary</th><th></th></tr></thead>
+          <thead><tr><th>SFDA Code</th><th>Trade Name</th><th>Type</th><th>Price</th><th>Status</th><th>Primary</th><th></th></tr></thead>
           <tbody>
             ${acItems.length?acItems.map(ai=>`
               <tr>
                 <td class="text-small">${esc(ai.wasfaty_items?.sfda_code||'')}</td>
-                <td dir="auto">${esc(ai.wasfaty_items?.trade_name||'')}</td>
-                <td><span class="badge ${ai.wasfaty_items?.item_type==='main'?'badge-blue':ai.wasfaty_items?.item_type==='alternative'?'badge-yellow':'badge-purple'}">${ai.wasfaty_items?.item_type||''}</span></td>
-                <td>${ai.wasfaty_items?.nupco_price?Number(ai.wasfaty_items.nupco_price).toFixed(2):'—'}</td>
-                <td><span class="badge ${ai.wasfaty_items?.activation_status?.toLowerCase()==='active'?'badge-green':'badge-gray'}">${esc(ai.wasfaty_items?.activation_status||'')}</span></td>
+                <td dir="auto" style="font-size:13px">${esc(ai.wasfaty_items?.trade_name||'')}</td>
+                <td><span class="badge ${ai.wasfaty_items?.item_type==='main'?'badge-blue':'badge-yellow'}">${ai.wasfaty_items?.item_type||''}</span></td>
+                <td style="font-size:13px">${ai.wasfaty_items?.nupco_price?Number(ai.wasfaty_items.nupco_price).toFixed(2):'—'}</td>
+                <td><span class="badge ${ai.wasfaty_items?.activation_status==='Live'?'badge-green':'badge-gray'}" style="font-size:10px">${esc(ai.wasfaty_items?.activation_status||'')}</span></td>
                 <td><input type="checkbox" ${ai.is_primary?'checked':''} onchange="setItemPrimary('${ai.id}',this.checked,'${ac.id}')"/></td>
                 <td><button class="btn btn-danger btn-xs" onclick="unlinkItem('${ai.id}','${ac.id}')">×</button></td>
               </tr>`).join(''):`<tr><td colspan="7" style="text-align:center;color:#aaa;padding:16px">No items linked</td></tr>`}
@@ -670,9 +851,23 @@ function renderACDetail(ac, acItems, suppliers){
     </div>`;
 }
 
+async function saveDetailClassification(id){
+  const val=document.getElementById('detail-cls-select').value||null;
+  const{error}=await db.from('wasfaty_active_constituents').update({classification:val,is_operating:val==='A'?true:undefined}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  const ac=allACs.find(a=>a.id===id);
+  if(ac){ac.classification=val;if(val==='A')ac.is_operating=true;}
+  updateClassificationCounts();
+  renderACTable();
+  selectAC(id);
+  toast('Classification saved','success');
+}
+
 async function toggleACOperating(id, val){
   await db.from('wasfaty_active_constituents').update({is_operating:val}).eq('id',id);
-  await loadACList();
+  const ac=allACs.find(a=>a.id===id);
+  if(ac) ac.is_operating=val;
+  renderACTable();
   toast(val?'Marked as operating':'Marked as inactive','success');
 }
 async function saveACProductRef(id){
